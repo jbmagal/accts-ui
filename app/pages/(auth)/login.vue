@@ -131,7 +131,7 @@ const onSubmit = async (
 
     currentUser.value = response.user
 
-    await navigateTo('/dashboard')
+    await navigateTo('/accounts')
   } catch (error: any) {
     console.error('Login error:', error)
 
