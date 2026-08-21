@@ -662,6 +662,63 @@ async function copyPassword(
   }
 }
 
+const loggingOut = ref(false)
+async function logout() {
+  if (loggingOut.value) {
+    return
+  }
+
+  loggingOut.value = true
+  errorMessage.value = ''
+
+  try {
+    /*
+     * Make sure Sanctum CSRF cookie exists.
+     */
+    await prepareCsrf()
+
+    /*
+     * IMPORTANT:
+     *
+     * /logout is normally a WEB route,
+     * not /api/logout.
+     *
+     * backendBase:
+     * https://accts-api.jbm65.com
+     */
+    await $fetch(
+      `${backendBase}/logout`,
+      {
+        method: 'POST',
+        credentials: 'include',
+        headers: getXsrfHeader(),
+      },
+    )
+
+    /*
+     * Redirect to login after session
+     * has been destroyed.
+     */
+    await navigateTo('/login')
+  } catch (error: any) {
+    /*
+     * If Laravel already considers us
+     * unauthenticated, just go to login.
+     */
+    if (getStatus(error) === 401) {
+      await navigateTo('/login')
+      return
+    }
+
+    showError(
+      getErrorMessage(error) ||
+      'Unable to log out.',
+    )
+  } finally {
+    loggingOut.value = false
+  }
+}
+
 /*
 |--------------------------------------------------------------------------
 | Initial load
@@ -699,12 +756,25 @@ onMounted(() => {
           </p>
         </div>
 
-        <UButton
-          icon="i-lucide-plus"
-          label="New Account"
-          size="lg"
-          @click="openCreateModal"
-        />
+        <div class="flex items-center gap-2">
+          <UButton
+            icon="i-lucide-plus"
+            label="New Account"
+            size="lg"
+            @click="openCreateModal"
+          />
+
+          <UButton
+            icon="i-lucide-log-out"
+            label="Logout"
+            color="neutral"
+            variant="outline"
+            size="lg"
+            :loading="loggingOut"
+            :disabled="loggingOut"
+            @click="logout"
+          />
+      </div>
       </div>
 
       <!-- Success message -->
