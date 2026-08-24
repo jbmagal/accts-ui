@@ -1,0 +1,50 @@
+name: Deploy Production
+
+on:
+  push:
+    branches:
+      - production
+
+  workflow_dispatch:
+
+concurrency:
+  group: accts-ui-production
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Deploy accts-ui
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Configure SSH
+        env:
+          PROD_SSH_KEY: ${{ secrets.ACCTS_UI_SSH_KEY }}
+          PROD_HOST: ${{ secrets.ACCTS_UI_HOST }}
+          PROD_PORT: ${{ secrets.ACCTS_UI_PORT }}
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+
+          printf '%s\n' "$ACCTS_UI_SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+
+          ssh-keyscan \
+            -p "$ACCTS_UI_PORT" \
+            -H "$ACCTS_UI_HOST" \
+            >> ~/.ssh/known_hosts
+
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Deploy production
+        env:
+          PROD_HOST: ${{ secrets.ACCTS_UI_HOST }}
+          PROD_USER: ${{ secrets.ACCTS_UI_USER }}
+          PROD_PORT: ${{ secrets.ACCTS_UI_PORT }}
+        run: |
+          ssh \
+            -p "$ACCTS_UI_PORT" \
+            -i ~/.ssh/id_ed25519 \
+            "$ACCTS_UI_USER@$ACCTS_UI_HOST" \
+            "/home/accts-ui/deploy.sh"
