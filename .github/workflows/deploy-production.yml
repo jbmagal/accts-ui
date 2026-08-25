@@ -44,7 +44,7 @@ jobs:
           PROD_PORT: ${{ secrets.ACCTS_UI_PORT }}
         run: |
           ssh \
-            -p "$PROD_UI_PORT" \
+            -p "$PROD_PORT" \
             -i ~/.ssh/id_ed25519 \
             "$PROD_USER@$PROD_HOST" \
             "/home/accts-ui/deploy.sh"
