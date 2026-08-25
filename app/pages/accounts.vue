@@ -687,7 +687,7 @@ async function logout() {
      * https://accts-api.jbm65.com
      */
     await $fetch(
-      `${backendBase}/logout`,
+      `${apiBase}/logout`,
       {
         method: 'POST',
         credentials: 'include',
